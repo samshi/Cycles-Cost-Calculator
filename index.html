@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <script src="/code/js/jsob_core.js"></script>
+  <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+  <title>Cycles Cost Calculator</title>
+  <style>
+      input {
+          width: 100px;
+      }
+      .c{
+          text-align: center;
+      }
+  </style>
+</head>
+<body>
+<h3 class="c">Cycles Cost Calculator</h3>
+<p class="c">
+  <a href="https://internetcomputer.org/docs/current/developer-docs/deploy/computation-and-storage-costs">1T cycles = $1.335</a>
+</p>
+<p class="c">
+  users <input id="user_number" value="1" oninput="calculator()"/>
+</p>
+
+<table id="item_table"></table>
+</body>
+</html>
+<script>
+  let unit_list = [
+    {
+      title   : 'Canister Created',
+      title_cn: '容器创建',
+      intro   : 'For creating canisters on a subnet',
+      intro_cn: '用于在子网上创建容器',
+      unit    : 1e11,
+      init    : 1,
+      times   : 0
+    }, {
+      title   : 'KB Storage Per Day',
+      title_cn: '每日KB存储',
+      intro   : 'For storing a KB of data per day',
+      intro_cn: '用于每日存储 KB 数据',
+      unit    : 0.127 * 24 * 3600,
+      init    : 1000000,
+      times   : 1
+    }, {
+      title   : 'Ingress Message Reception',
+      title_cn: '入口消息接收',
+      intro   : 'For every ingress message received',
+      intro_cn: '对于收到的每个入口消息',
+      unit    : 1200000,
+      para    : 1,
+      init    : 10,
+    }, {
+      title   : 'Ingress Message Reception',
+      title_cn: '入口字节接收',
+      intro   : 'Ingress Byte Reception',
+      intro_cn: '对于在入口消息中收到的每个字节',
+      unit    : 2000,
+      init    : 1000,
+    }, {
+      title   : 'Update Message Execution',
+      title_cn: '更新消息执行',
+      intro   : 'For every update message executed',
+      intro_cn: '对于执行的每个更新消息',
+      unit    : 590000,
+      para    : 1,
+      init    : 10,
+    }, {
+      title   : 'Ten Update Instructions Execution',
+      title_cn: '十条更新指令执行',
+      intro   : 'For every 10 instructions executed when executing update type messages',
+      intro_cn: '执行更新类型消息时每执行 10 条指令',
+      unit    : 4,
+      init    : 1,
+    }, {
+      title   : 'Xnet Call',
+      title_cn: '容器间调用',
+      intro   : 'For every inter-canister call performed (includes the cost for sending the request and receiving the response)',
+      intro_cn: '对于执行的每个容器间调用（包括发送请求和接收响应的成本）',
+      unit    : 260000,
+      para    : 1,
+      init    : 1,
+    }, {
+      title   : 'Xnet Byte Transmission',
+      title_cn: '容器间调用 字节传输',
+      intro   : 'For every byte sent in an inter-canister call (for bytes sent in the request and response)',
+      intro_cn: '对于在容器间调用中发送的每个字节（对于请求和响应中发送的字节）',
+      unit    : 1000,
+      init    : 0,
+    }, {
+      title   : 'Compute Percent Allocated Per Second',
+      title_cn: '计算每秒分配的百分比',
+      intro   : 'For each percent of the reserved compute allocation (a scarce resource)',
+      intro_cn: '对于预留计算分配（稀缺资源）的每个百分比',
+      unit    : 100000,
+      init    : 0,
+    },
+  ]
+
+  console.log(unit_list)
+
+  let td = createHTML('td')
+  let tr = createHTML('tr')
+  let th = createHTML('th')
+  let bb = createHTML('b')
+  let sm = createHTML('small')
+
+  $(_ => {
+    $.body.S({
+      D: 'block'
+    })
+    let th_content = ''
+    th_content += th('title')
+    th_content += th('title_cn')
+    // th_content += th('intro')
+    // th_content += th('intro_cn')
+    th_content += th('unit')
+    th_content += th('value 每次调用数据')
+    th_content += th('times (day)')
+    th_content += th('day (cycles)')
+    th_content += th('month (T cycles)')
+    th_content += th('year (T cycles)')
+    let table = tr(th_content)
+
+    for(let i = 0, l = unit_list.length; i < l; i++){
+      let unit       = unit_list[i]
+      let tr_content = ''
+      tr_content     = td(bb(unit.title) + '<br>' + sm(unit.intro))
+      tr_content += td(bb(unit.title_cn) + '<br>' + sm(unit.intro_cn))
+      // tr_content += td(unit.title_cn)
+      // tr_content += td(unit.intro)
+      // tr_content += td(unit.intro_cn)
+      tr_content += td(unit.unit)
+      tr_content += td(unit.para || '<input value="' + unit.init + '" oninput="calculator()"/>')
+      tr_content += td(unit.times == undefined ? '<input value="0" oninput="calculator()"/>' : (unit.times || ''))
+      tr_content += td('')
+      tr_content += td('')
+      tr_content += td('')
+      table += tr(tr_content)
+    }
+    let total_content = '<td colspan=6><b>total</b></td>'
+    total_content += td('')
+    total_content += td('')
+    table += tr(total_content)
+
+    $('#item_table').I(table)
+
+    calculator()
+  })
+
+  function calculator(){
+    let user_number = +$('#user_number').val()
+    let table_eobj  = $('#item_table')
+    let rows        = table_eobj.context.children[0].children
+    let sum_day     = 0
+    let sum_month   = 0
+    let sum_year    = 0
+
+    console.log({
+      user_number,
+      table_eobj,
+      rows
+    })
+
+    for(let i = 1, l = rows.length; i < l; i++){
+      let tr  = rows[i]
+      let tds = tr.children
+
+      if(i < l - 1){
+        if(i == 1){
+          tds[5].innerText = getValue(tds[2]) * getValue(tds[3])
+          tds[6].innerText = getValue(tds[5]) / 1e12
+          tds[7].innerText = getValue(tds[6])
+        }
+        else{
+          tds[5].innerText = getValue(tds[2]) * getValue(tds[3]) * getValue(tds[4]) * user_number
+          tds[6].innerText = Math.ceil(getValue(tds[5]) * 30 / 1e9) / 1000
+          tds[7].innerText = Math.ceil(getValue(tds[5]) * 365 / 1e9) / 1000
+        }
+        sum_month += +getValue(tds[6])
+        sum_year += +getValue(tds[7])
+      }
+      else{
+        tds[1].innerText = Math.ceil(sum_month*1000)/1000
+        tds[2].innerText = Math.ceil(sum_year*1000)/1000
+      }
+
+    }
+  }
+
+  function getValue(node){
+    if(/input/gi.test(node.innerHTML)){
+      return node.children[0].value
+    }
+    return node.innerText
+  }
+
+  function createHTML(el){
+    return function(s){
+      return `<${el}>${s}</${el}>`
+    }
+  }
+
+
+</script>
