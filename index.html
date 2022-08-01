@@ -9,7 +9,8 @@
       input {
           width: 100px;
       }
-      .c{
+
+      .c {
           text-align: center;
       }
   </style>
@@ -132,7 +133,7 @@
       // tr_content += td(unit.title_cn)
       // tr_content += td(unit.intro)
       // tr_content += td(unit.intro_cn)
-      tr_content += td(unit.unit)
+      tr_content += td(myFormat(unit.unit))
       tr_content += td(unit.para || '<input value="' + unit.init + '" oninput="calculator()"/>')
       tr_content += td(unit.times == undefined ? '<input value="0" oninput="calculator()"/>' : (unit.times || ''))
       tr_content += td('')
@@ -170,12 +171,12 @@
 
       if(i < l - 1){
         if(i == 1){
-          tds[5].innerText = getValue(tds[2]) * getValue(tds[3])
+          tds[5].innerText = myFormat(getValue(tds[2]) * getValue(tds[3]))
           tds[6].innerText = getValue(tds[5]) / 1e12
           tds[7].innerText = getValue(tds[6])
         }
         else{
-          tds[5].innerText = getValue(tds[2]) * getValue(tds[3]) * getValue(tds[4]) * user_number
+          tds[5].innerText = myFormat(getValue(tds[2]) * getValue(tds[3]) * getValue(tds[4]) * user_number)
           tds[6].innerText = Math.ceil(getValue(tds[5]) * 30 / 1e9) / 1000
           tds[7].innerText = Math.ceil(getValue(tds[5]) * 365 / 1e9) / 1000
         }
@@ -183,8 +184,8 @@
         sum_year += +getValue(tds[7])
       }
       else{
-        tds[1].innerText = Math.ceil(sum_month*1000)/1000
-        tds[2].innerText = Math.ceil(sum_year*1000)/1000
+        tds[1].innerText = Math.ceil(sum_month * 1000) / 1000
+        tds[2].innerText = Math.ceil(sum_year * 1000) / 1000
       }
 
     }
@@ -203,5 +204,8 @@
     }
   }
 
+  function myFormat(n){
+    return +n <= 10000 ? n : n.toExponential(2)
+  }
 
 </script>
